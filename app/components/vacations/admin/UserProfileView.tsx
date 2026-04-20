@@ -112,7 +112,7 @@ export default function UserProfileView({ agent, onBack, onDeleted }: Props) {
               >
                 Edit
               </button>
-              {!confirmDelete ? (
+              {agent.level !== 'admin' && (!confirmDelete ? (
                 <button
                   onClick={() => setConfirmDelete(true)}
                   className="px-4 py-2 rounded-lg text-xs font-semibold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
@@ -136,7 +136,7 @@ export default function UserProfileView({ agent, onBack, onDeleted }: Props) {
                     Cancel
                   </button>
                 </div>
-              )}
+              ))}
             </div>
           </>
         ) : (

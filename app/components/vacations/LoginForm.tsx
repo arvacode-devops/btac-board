@@ -20,12 +20,25 @@ export default function LoginForm() {
   const [error,    setError]    = useState('')
   const [loading,  setLoading]  = useState(false)
 
+  const handleNnumber = (raw: string) => {
+    // Allow only: optional leading 'n'/'N' + up to 7 digits
+    const stripped = raw.replace(/[^nN\d]/g, '')
+    let out = ''
+    for (const ch of stripped) {
+      if (out === '' && (ch === 'n' || ch === 'N')) { out = 'n'; continue }
+      if (/\d/.test(ch) && out.replace('n', '').length < 7) out += ch
+    }
+    setNnumber(out)
+  }
+
+  const isValid = /^n\d{7}$/.test(nnumber)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
     try {
-      await signIn(`${nnumber.trim().toLowerCase()}${DOMAIN}`, password)
+      await signIn(`${nnumber}${DOMAIN}`, password)
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? ''
       setError(ERROR_MESSAGES[code] ?? 'Something went wrong. Please try again.')
@@ -45,20 +58,16 @@ export default function LoginForm() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="block text-xs text-gray-500 mb-1.5">N-Number</label>
-            <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-400">
-              <input
-                type="text"
-                value={nnumber}
-                onChange={e => setNnumber(e.target.value)}
-                required
-                placeholder="n123456"
-                autoComplete="username"
-                className="flex-1 px-4 py-2.5 text-sm text-gray-900 focus:outline-none"
-              />
-              <span className="px-3 text-sm text-gray-400 bg-gray-50 border-l border-gray-200 py-2.5 select-none">
-                @windstream.com
-              </span>
-            </div>
+            <input
+              type="text"
+              value={nnumber}
+              onChange={e => handleNnumber(e.target.value)}
+              required
+              placeholder="n1234567"
+              autoComplete="username"
+              maxLength={8}
+              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
           </div>
 
           <div>
@@ -79,7 +88,7 @@ export default function LoginForm() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !isValid}
             className="w-full bg-gray-900 text-white rounded-xl py-2.5 text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 transition-colors"
           >
             {loading ? 'Signing in…' : 'Sign in'}
