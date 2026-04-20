@@ -1,0 +1,159 @@
+(Provisioning both ports)
+config t
+interface vdsl $SHELF/SLOT/PORT1
+ description $CUSTOMER_TEL_NUMBER
+ dmt-options snr-margin downstream margins minimum 2.0 target 6.0 maximum 16.0
+ dmt-options snr-margin upstream margins minimum 2.0 target 6.0 maximum 16.0
+ latency-path delay downstream 0 5
+ latency-path delay upstream 0 5
+ latency-path inp downstream 0 0.5
+ latency-path inp upstream 0 0.5
+ latency-path payload-rate downstream 0 minimum 128 maximum $DOWNSTREAM_RATE
+ latency-path payload-rate upstream 0 minimum 64 maximum $UPSTREAM_RATE
+ latency-path type downstream 0 interleave
+ latency-path type upstream 0 interleave
+ power-back-off upstream mode disable
+ rate-adaption down-shift downstream margin 3.0
+ rate-adaption down-shift downstream time 60
+ rate-adaption down-shift upstream margin 3.0
+ rate-adaption down-shift upstream time 60
+ rate-adaption up-shift downstream margin 9.0
+ rate-adaption up-shift downstream time 60
+ rate-adaption up-shift upstream margin 9.0
+ rate-adaption up-shift upstream time 60
+ rate-adaption downstream runtime
+ rate-adaption upstream runtime
+ service-mode adsl2+  
+shutdown
+exit
+
+interface vdsl $SHELF/SLOT/PORT2
+ description $CUSTOMER_TEL_NUMBER
+ dmt-options snr-margin downstream margins minimum 2.0 target 6.0 maximum 16.0
+ dmt-options snr-margin upstream margins minimum 2.0 target 6.0 maximum 16.0
+ latency-path delay downstream 0 5
+ latency-path delay upstream 0 5
+ latency-path inp downstream 0 0.5
+ latency-path inp upstream 0 0.5
+ latency-path payload-rate downstream 0 minimum 128 maximum $DOWNSTREAM_RATE
+ latency-path payload-rate upstream 0 minimum 64 maximum $UPSTREAM_RATE
+ latency-path type downstream 0 interleave
+ latency-path type upstream 0 interleave
+ power-back-off upstream mode disable
+ rate-adaption down-shift downstream margin 3.0
+ rate-adaption down-shift downstream time 60
+ rate-adaption down-shift upstream margin 3.0
+ rate-adaption down-shift upstream time 60
+ rate-adaption up-shift downstream margin 9.0
+ rate-adaption up-shift downstream time 60
+ rate-adaption up-shift upstream margin 9.0
+ rate-adaption up-shift upstream time 60
+ rate-adaption downstream runtime
+ rate-adaption upstream runtime
+ service-mode adsl2+  
+shutdown
+exit
+
+interface atm-port $SHELF/SLOT/PORT1
+shutdown
+exit
+interface atm-port $SHELF/SLOT/PORT2
+shutdown
+exit
+ 
+no interface vcl $SHELF/SLOT/PORT1 vpi 0 vci 35 
+no interface vcl $SHELF/SLOT/PORT2 vpi 0 vci 35 
+
+
+interface efm-port $SHELF/SLOT/PORT1
+no shutdown
+interface efm-port $SHELF/SLOT/PORT2
+no shutdown
+exit
+
+(Creating a bonding group)
+interface efm-group $Group_Name  
+ link $slot/port1,$slot/port2
+ no rate-control enable
+ no alarm enable group-down
+ no alarm enable group-partial
+ rate-control rate upstream 1 downstream 1
+ no shutdown
+ exit
+interface efm-link $SHELF/SLOT/PORT1
+ no alarm enable link-down
+ exit
+interface efm-link $SHELF/SLOT/PORT2
+ no alarm enable link-down
+ exit
+
+ interface vdsl $SHELF/SLOT/PORT1
+ no shutdown
+ exit
+ interface vdsl $SHELF/SLOT/PORT2
+ no shutdown
+ exit 
+ 
+ evc-map $SHELF/SLOT/PORT1_$dslam-name_P/I $shelf/slot
+ connect evc $V-TAG
+ connect uni efm-group $Group_Name
+ match untagged
+ men-pri inherit
+ men-c-tag $C-TAG
+ men-c-tag-pri inherit
+ encapsulation ethernet
+ no subscriber access pppoe intermediate-agent
+ subscriber access pppoe mode block
+ subscriber access dhcp mode authenticate
+ subscriber access dhcp option-82
+ subscriber access dhcp option-82 remote-id
+ subscriber access dhcp option-82 remote-id format /$ISPP
+ subscriber access dhcpv6 relay-agent remote-id insert
+ subscriber access dhcpv6 relay-agent remote-id format /$ISPP
+ subscriber access pppoe intermediate-agent remote-id
+ subscriber access pppoe intermediate-agent remote-id format /$ISPP
+ description $CUSTOMER_TEL_NUMBER
+ no shutdown
+ end
+ 
+ (Verify)
+Verify EVC-MAP
+
+show table evc-map 1/1
+
+Evc-map (Cross Connection):
+
+show evc-map $SHELF/SLOT/PORT1_$dslam-name_P/I $shelf/slot
+
+(Deprovision)
+config  t
+interface vdsl $SHELF/SLOT/PORT1
+ no description $CUSTOMER_TEL_NUMBER
+ shutdown
+ exit
+interface vdsl $SHELF/SLOT/PORT2
+ no description $CUSTOMER_TEL_NUMBER
+ shutdown
+ exit
+int atm-port $SHELF/SLOT/PORT1
+ shut
+ exit
+int atm-port $SHELF/SLOT/PORT2
+ shut
+ exit
+int efm-port $SHELF/SLOT/PORT1
+ shut
+ exit
+int efm-port $SHELF/SLOT/PORT2
+ shut
+ exit
+no int vcl $SHELF/SLOT/PORT1 vpi 0 vci 35
+no int vcl $SHELF/SLOT/PORT2 vpi 0 vci 35
+no evc-map $SHELF/SLOT/PORT1_Data 1/8
+no evc-map $SHELF/SLOT/PORT2_Data 1/8
+no evc-map $SHELF/SLOT/PORT1 1/8
+no evc-map $SHELF/SLOT/PORT2 1/8
+no evc-map $SHELF/SLOT/PORT1_dslam-name_encapsulation 1/8>
+no evc-map $SHELF/SLOT/PORT2_dslam-name_encapsulation 1/8>
+no int efm-group 1/8/x
+end

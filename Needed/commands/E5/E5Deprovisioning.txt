@@ -1,0 +1,13 @@
+(Deprovision DSL Port)
+
+vdsl disable $1ST_PORT#
+vdsl name $1ST_PORT# " "
+vdsl tel $1ST_PORT# " "
+
+(Deprovision Cross-Connect)
+
+vdsl dtpvc delete $1ST_PORT# 0 35 DEFVAL $V-TAG 0 $C-TAG 0
+vdsl dt disable $1ST_PORT#
+
+(Deprovisioning Bond)
+vdsl gbond delete $Bond_Name

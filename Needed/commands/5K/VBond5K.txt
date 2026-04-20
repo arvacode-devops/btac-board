@@ -1,0 +1,145 @@
+(Step 1)
+ show efm-group $shelf/slot
+(Step 2 PROVISIONING BOTH PORTS)
+config t
+interface vdsl $SHELF/SLOT/PORT1
+ description $CUSTOMER_TEL_NUMBER
+ deployment region 1 scenario 2 other-service 1 application-standard 3 band-plan 1 band-profile $7=17a/2=8b psd-u0 1 psd-mask 1
+ dmt-options snr-margin downstream margins minimum 2.0 target 6.0 maximum 16.0
+ dmt-options snr-margin upstream margins minimum 2.0 target 6.0 maximum 16.0
+ latency-path delay downstream 0 5
+ latency-path delay upstream 0 5
+ latency-path inp downstream 0 0.5
+ latency-path inp upstream 0 0.5
+ latency-path payload-rate downstream 0 minimum 128 maximum $DOWNSTREAM_RATE
+ latency-path payload-rate upstream 0 minimum 64 maximum $UPSTREAM_RATE
+ latency-path type downstream 0 interleave
+ latency-path type upstream 0 interleave
+ latency-path retransmission downstream 0 mode custom
+ latency-path retransmission downstream 0 custom-config delay 0-20
+ latency-path retransmission downstream 0 custom-config max-ndr $DOWNSTREAM_RATE
+ latency-path retransmission upstream 0 mode custom
+ latency-path retransmission upstream 0 custom-config delay 0-20
+ latency-path retransmission upstream 0 custom-config max-ndr $UPSTREAM_RATE
+ power-back-off upstream mode custom
+ power-back-off upstream custom-config electrical-length 0.0
+ no power-back-off upstream custom-config force-co-length
+ power-back-off upstream custom-config band 1 cable-model a 53 b 16.2
+ power-back-off upstream custom-config band 2 cable-model a 54 b 10.2 
+ rate-adaption down-shift downstream margin 3.0
+ rate-adaption down-shift downstream time 60
+ rate-adaption down-shift upstream margin 3.0
+ rate-adaption down-shift upstream time 60
+ rate-adaption up-shift downstream margin 9.0
+ rate-adaption up-shift downstream time 60
+ rate-adaption up-shift upstream margin 9.0
+ rate-adaption up-shift upstream time 60
+ rate-adaption downstream runtime
+ rate-adaption upstream runtime
+ service-mode vdsl2  
+shutdown
+exit
+ interface vdsl $SHELF/SLOT/PORT2
+ no alarm enable link-down
+ description $CUSTOMER_TEL_NUMBER
+ deployment region 1 scenario 2 other-service 1 application-standard 3 band-plan 1 band-profile 7 psd-u0 1 psd-mask 1    
+ dmt-options snr-margin downstream margins minimum 2.0 target 6.0 maximum 16.0
+ dmt-options snr-margin upstream margins minimum 2.0 target 6.0 maximum 16.0
+ latency-path delay downstream 0 5
+ latency-path delay upstream 0 5
+ latency-path inp downstream 0 0.5
+ latency-path inp upstream 0 0.5
+ latency-path payload-rate downstream 0 minimum 128 maximum $DOWNSTREAM_RATE
+ latency-path payload-rate upstream 0 minimum 64 maximum $UPSTREAM_RATE
+ latency-path type downstream 0 interleave
+ latency-path type upstream 0 interleave
+ latency-path retransmission downstream 0 mode custom
+ latency-path retransmission downstream 0 custom-config delay 0-20
+ latency-path retransmission downstream 0 custom-config max-ndr $DOWNSTREAM_RATE
+ latency-path retransmission upstream 0 mode custom
+ latency-path retransmission upstream 0 custom-config delay 0-20
+ latency-path retransmission upstream 0 custom-config max-ndr $UPSTREAM_RATE
+ power-back-off upstream mode custom
+ power-back-off upstream custom-config electrical-length 0.0
+ no power-back-off upstream custom-config force-co-length
+ power-back-off upstream custom-config band 1 cable-model a 53 b 16.2
+ power-back-off upstream custom-config band 2 cable-model a 54 b 10.2 
+ rate-adaption down-shift downstream margin 3.0
+ rate-adaption down-shift downstream time 60
+ rate-adaption down-shift upstream margin 3.0
+ rate-adaption down-shift upstream time 60
+ rate-adaption up-shift downstream margin 9.0
+ rate-adaption up-shift downstream time 60
+ rate-adaption up-shift upstream margin 9.0
+ rate-adaption up-shift upstream time 60
+ rate-adaption downstream runtime
+ rate-adaption upstream runtime
+ service-mode vdsl2  
+shutdown
+exit 
+
+interface atm-port $SHELF/SLOT/PORT1
+ shutdown
+ exit
+ interface atm-port $SHELF/SLOT/PORT2
+ shutdown
+ exit
+Make sure that Interface VCL for $SHELF/SLOT/PORT1 and $SHELF/SLOT/PORT2 are deleted
+
+no interface vcl $SHELF/SLOT/PORT1 vpi 0 vci 35 
+no interface vcl $SHELF/SLOT/PORT2 vpi 0 vci 35 
+Enable EFM Port ports
+
+ interface efm-port $SHELF/SLOT/PORT1
+ no shutdown
+ interface efm-port $SHELF/SLOT/PORT2
+ no shutdown
+ exit
+ 
+ (Create bonding group)
+ 
+ interface efm-group $Group_Name
+ link $shelf/slot,$shelf/slot
+ no rate-control enable
+ no alarm enable group-down
+ no alarm enable group-partial
+ rate-control rate upstream 1 downstream 1
+ no shutdown
+ exit
+interface efm-link $SHELF/SLOT/PORT1
+ no alarm enable link-down
+interface efm-link $SHELF/SLOT/PORT2
+ no alarm enable link-down
+ 
+(Cross connect )
+interface vdsl $SHELF/SLOT/PORT1
+ no shutdown
+ exit
+ interface vdsl $SHELF/SLOT/PORT2
+ no shutdown
+ exit
+
+
+ show table evc
+
+ evc-map $SHELF/SLOT/PORT1_$dslam-name_P/I $shelf/slot
+ connect evc $V-TAG
+ connect uni efm-group $Group_Name
+ match untagged
+ men-pri inherit
+ men-c-tag $C-TAG
+ men-c-tag-pri inherit
+ encapsulation ethernet
+ no subscriber access pppoe intermediate-agent
+ subscriber access pppoe mode block
+ subscriber access dhcp mode authenticate
+ subscriber access dhcp option-82
+ subscriber access dhcp option-82 remote-id
+ subscriber access dhcp option-82 remote-id format /$ISPP
+ subscriber access dhcpv6 relay-agent remote-id insert
+ subscriber access dhcpv6 relay-agent remote-id format /$ISPP
+ subscriber access pppoe intermediate-agent remote-id
+ subscriber access pppoe intermediate-agent remote-id format /$ISPP
+ description $CUSTOMER_TEL_NUMBER
+ no shutdown
+ end

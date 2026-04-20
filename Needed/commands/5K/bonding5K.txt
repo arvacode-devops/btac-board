@@ -1,0 +1,30 @@
+(G.Bond)
+interface efm-group $Group_Name  
+ link 8/1,8/2
+ no rate-control enable
+ no alarm enable group-down
+ no alarm enable group-partial
+ rate-control rate upstream 1 downstream 1
+ no shutdown
+ exit
+interface efm-link $SHELF/SLOT/PORT1
+ no alarm enable link-down
+ exit
+interface efm-link $SHELF/SLOT/PORT2
+ no alarm enable link-down
+ exit
+ 
+(V.Bond)
+interface efm-group $Group_Name
+ link $shelf/port#1,$shelf/port#2
+ no rate-control enable
+ no alarm enable group-down
+ no alarm enable group-partial
+ rate-control rate upstream 1 downstream 1
+ no shutdown
+ exit
+interface efm-link $SHELF/SLOT/PORT1
+ no alarm enable link-down
+interface efm-link $SHELF/SLOT/PORT2
+ no alarm enable link-down
+ 

@@ -1,0 +1,105 @@
+Step 1 (Setting QoS)
+
+$DOWNRATEkbps-down or UpToMaxSpeedFortheRangeProfileMbps 
+
+Example: 14976kbps-down for “Fixed” (non-ranged) QoS Format and  Ranged QoS Format:  UpTo36Mbps
+
+Step 2 (Verifications)
+
+Check VLAN: show table evc
+Check neighbors: sh tab evc-map $shelf/slot sub
+Check for a group: sh efm-group $shelf/slot
+
+Step 3 (Provisioning)
+
+Config  t
+interface vdsl $SHELF/SLOT/PORT
+ description $CUSTOMER_TEL_NUMBER
+ deployment region 1 scenario 2 other-service 1 application-standard 3 band-plan 1 band-profile $BAND_PROFILE_7/2 psd-u0 1 psd-mask 1
+ dmt-options snr-margin downstream margins minimum 2.0 target 6.0 maximum 16.0
+ dmt-options snr-margin upstream margins minimum 2.0 target 6.0 maximum 16.0
+ latency-path delay downstream 0 5
+ latency-path delay upstream 0 5
+ latency-path inp downstream 0 0.5
+ latency-path inp upstream 0 0.5
+ latency-path payload-rate downstream 0 minimum 128 maximum $DOWNSTREAM_RATE
+ latency-path payload-rate upstream 0 minimum 32 maximum $UPSTREAM_RATE   
+ latency-path type downstream 0 interleave
+ latency-path type upstream 0 interleave
+ latency-path retransmission downstream 0 mode custom
+ latency-path retransmission downstream 0 custom-config delay 0-20
+ latency-path retransmission downstream 0 custom-config max-ndr $DOWNSTREAM_RATE
+ latency-path retransmission upstream 0 mode custom
+ latency-path retransmission upstream 0 custom-config delay 0-20
+ latency-path retransmission upstream 0 custom-config max-ndr $UPSTREAM_RATE
+ power-back-off upstream mode disable
+ rate-adaption down-shift downstream margin 3.0
+ rate-adaption down-shift downstream time 60
+ rate-adaption down-shift upstream margin 3.0
+ rate-adaption down-shift upstream time 60
+ rate-adaption up-shift downstream margin 9.0
+ rate-adaption up-shift downstream time 60
+ rate-adaption up-shift upstream margin 9.0
+ rate-adaption up-shift upstream time 60
+ rate-adaption downstream runtime
+ rate-adaption upstream runtime
+ service-mode vdsl2
+ no shutdown
+exit
+
+interface atm-port $SHELF/SLOT/PORT
+shutdown
+exit
+
+(Delete Existing VCLs)
+
+no interface vcl $SHELF/SLOT/PORT vpi 0 vci 35 
+
+Enable EFM (PTM) Port
+
+interface efm-port $SHELF/SLOT/PORT
+no shutdown
+exit
+
+
+(cROSScONNECT)
+
+ evc-map $shelf/slot/1_dslam-name_encapsulation $shelf/slot
+ connect evc $V-TAG
+ connect uni efm-port $SHELF/SLOT/PORT
+ match untagged
+ men-pri inherit
+ men-c-tag $C-TAG
+ men-c-tag-pri inherit
+ encapsulation ethernet
+ no subscriber access pppoe intermediate-agent
+ subscriber access dhcp mode block
+ subscriber access pppoe mode authenticate
+ subscriber access dhcp option-82
+ subscriber access dhcp option-82 remote-id
+ subscriber access dhcp option-82 remote-id format /$ISPP
+ subscriber access dhcpv6 relay-agent remote-id insert
+ subscriber access dhcpv6 relay-agent remote-id format /$ISPP
+ subscriber access pppoe intermediate-agent remote-id
+ subscriber access pppoe intermediate-agent remote-id format /$ISPP
+ description $CUSTOMER_TEL_NUMBER
+ no shutdown
+ end
+ 
+( Deprovision)
+config  t
+interface vdsl $SHELF/SLOT/PORT
+ no description 0123456789
+ shutdown
+ exit
+int atm-port $SHELF/SLOT/PORT
+ shut
+ exit
+int efm-port $SHELF/SLOT/PORT
+ shut
+ exit
+no int vcl $SHELF/SLOT/PORT vpi 0 vci 35
+no evc-map $SHELF/SLOT/PORT_Data $shelf/slot
+no evc-map $SHELF/SLOT/PORT $shelf/slot
+no evc-map $SHELF/SLOT/PORT_dslam-name_encapsulation $shelf/slot
+end

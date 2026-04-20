@@ -1,0 +1,89 @@
+GBOND
+Step 1 (Recon Group)
+First find out if your customer's port is already assigned to a bonded group
+
+show dsl-port v$1ST_PORT# basic
+show dsl-port v$2ND_PORT# basic
+show dsl-bond-interface
+
+Step 2 (Recon)
+
+sh bw-profile
+
+sh svc-tag-action
+
+Step 3 (Provision both ports)
+set dsl-port v$1ST_PORT# psd ds-vectoring disabled
+set dsl-port v$1ST_PORT# psd us-vectoring disabled
+set dsl-port v$1ST_PORT# psd join-vectoring-grp no
+set dsl-port v$1ST_PORT# basic admin-state no-alarms
+set dsl-port v$1ST_PORT# basic description $CUSTOMER_TEL_NUMBER
+set dsl-port v$1ST_PORT# basic path-latency interleaved
+set dsl-port v$1ST_PORT# basic service-type adsl2+
+set dsl-port v$1ST_PORT# basic vdsl-profile auto
+set dsl-port v$1ST_PORT# basic ds-max-rate $DOWNSTREAM_RATE
+set dsl-port v$1ST_PORT# basic ds-min-rate 128
+set dsl-port v$1ST_PORT# basic us-max-rate $UPSTREAM_RATE
+set dsl-port v$1ST_PORT# basic us-min-rate 64
+set dsl-port v$1ST_PORT# basic ds-min-snr 2
+set dsl-port v$1ST_PORT# basic us-min-snr 2
+set dsl-port v$1ST_PORT# basic ds-target-snr 6
+set dsl-port v$1ST_PORT# basic us-target-snr 6
+set dsl-port v$1ST_PORT# basic ds-max-snr 16
+set dsl-port v$1ST_PORT# basic us-max-snr 16
+set dsl-port v$1ST_PORT# basic ds-intrlv-max-latency 5
+set dsl-port v$1ST_PORT# basic us-intrlv-max-latency 5
+set dsl-port v$1ST_PORT# basic ds-min-inp 0.5
+set dsl-port v$1ST_PORT# basic us-min-inp 0.5
+set dsl-port v$1ST_PORT# advanced ptm-override ptm
+set dsl-port v$1ST_PORT# advanced atm-header-compress disabled
+set dsl-port v$1ST_PORT# advanced ds-rate-adapt-mode dynamic
+set dsl-port v$1ST_PORT# advanced us-rate-adapt-mode dynamic
+set dsl-port v$1ST_PORT# advanced ds-enhanced-inp none 
+set dsl-port v$1ST_PORT# advanced us-enhanced-inp none 
+set dsl-port v$1ST_PORT# psd upbo-band-1-a 53 upbo-band-1-b 12.94 upbo-band-2-a 54 upbo-band-2-b 7.41 
+
+set dsl-port v$2ND_PORT# psd ds-vectoring disabled 
+set dsl-port v$2ND_PORT# psd us-vectoring disabled 
+set dsl-port v$2ND_PORT# psd join-vectoring-grp no
+set dsl-port v$2ND_PORT# basic admin-state no-alarms 
+set dsl-port v$2ND_PORT# basic description $CUSTOMER_TEL_NUMBER
+set dsl-port v$2ND_PORT# basic path-latency interleaved 
+set dsl-port v$2ND_PORT# basic service-type adsl2+
+set dsl-port v$2ND_PORT# basic vdsl-profile auto
+set dsl-port v$2ND_PORT# basic ds-max-rate $DOWNSTREAM_RATE
+set dsl-port v$2ND_PORT# basic ds-min-rate 128 
+set dsl-port v$2ND_PORT# basic us-max-rate $UPSTREAM_RATE
+set dsl-port v$2ND_PORT# basic us-min-rate 64 
+set dsl-port v$2ND_PORT# basic ds-min-snr 2 
+set dsl-port v$2ND_PORT# basic us-min-snr 2 
+set dsl-port v$2ND_PORT# basic ds-target-snr 6 
+set dsl-port v$2ND_PORT# basic us-target-snr 6 
+set dsl-port v$2ND_PORT# basic ds-max-snr 16 
+set dsl-port v$2ND_PORT# basic us-max-snr 16 
+set dsl-port v$2ND_PORT# basic ds-intrlv-max-latency 5 
+set dsl-port v$2ND_PORT# basic us-intrlv-max-latency 5 
+set dsl-port v$2ND_PORT# basic ds-min-inp 0.5 
+set dsl-port v$2ND_PORT# basic us-min-inp 0.5 
+set dsl-port v$2ND_PORT# advanced ptm-override ptm 
+set dsl-port v$2ND_PORT# advanced atm-header-compress disabled 
+set dsl-port v$2ND_PORT# advanced ds-rate-adapt-mode dynamic
+set dsl-port v$2ND_PORT# advanced us-rate-adapt-mode dynamic
+set dsl-port v$2ND_PORT# advanced ds-enhanced-inp none 
+set dsl-port v$2ND_PORT# advanced us-enhanced-inp none 
+set dsl-port v$2ND_PORT# psd upbo-band-1-a 53 upbo-band-1-b 12.94 upbo-band-2-a 54 upbo-band-2-b 7.41
+
+Step 4 (Create the group)
+
+create dsl-bond-interface v$1ST_PORT#_OF_GROUP admin-state no-alarms subscriber-id /$ISPPACCTID(10 DIGIT ISPP ACCOUNT ID) ds-min-rate 256 us-min-rate 128
+set dsl-port v$1ST_PORT# basic dsl-bond-interface v$1ST_PORT#_OF_GROUP
+set dsl-port v$2ND_PORT# basic dsl-bond-interface v$1ST_PORT#_OF_GROUP
+
+Step 5 (Cross Connect)
+
+Now Build the Cross Connect:
+
+add eth-svc Data1 to-dsl-bond-interface v$1ST_PORT#_OF_GROUP bw-profile $BW_PROFILE svc-tag-action $VLAN_NAME inner-vlan $C-TAG admin-state enabled
+Note/ for NQQ VLAN, use "none" for the inner-vlan
+
+add eth-svc Data1 to-dsl-bond-interface v$1ST_PORT#_OF_GROUP bw-profile $BW_PROFILE svc-tag-action $VLAN_NAME inner-vlan none admin-state enabled

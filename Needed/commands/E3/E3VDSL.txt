@@ -1,0 +1,55 @@
+Step 1 (Recon)
+
+sh bw-profile
+
+sh svc-tag-action
+
+Step 2 (Procvisioning)
+
+set dsl-port v$1ST_PORT# psd ds-vectoring enabled 
+set dsl-port v$1ST_PORT# psd us-vectoring enabled 
+set dsl-port v$1ST_PORT# psd join-vectoring-grp yes
+set dsl-port v$1ST_PORT# basic admin-state no-alarms 
+set dsl-port v$1ST_PORT# basic description $CUSTOMER_TEL_NUMBER
+set dsl-port v$1ST_PORT# basic path-latency interleaved 
+set dsl-port v$1ST_PORT# basic service-type vdsl2
+apply dsl-template VDSL2-DPBO to-dsl-port v$1ST_PORT#
+set dsl-port v$1ST_PORT# basic vdsl-profile $BAND_PROFILE_FROM_RECORD(Enter 17a or 8b)
+set dsl-port v$1ST_PORT# basic ds-max-rate $DOWNSTREAM_RATE
+set dsl-port v$1ST_PORT# basic ds-min-rate 128 
+set dsl-port v$1ST_PORT# basic us-max-rate $UPSTREAM_RATE
+set dsl-port v$1ST_PORT# basic us-min-rate 64 
+set dsl-port v$1ST_PORT# basic ds-min-snr 2 
+set dsl-port v$1ST_PORT# basic us-min-snr 2 
+set dsl-port v$1ST_PORT# basic ds-target-snr 6 
+set dsl-port v$1ST_PORT# basic us-target-snr 6 
+set dsl-port v$1ST_PORT# basic ds-max-snr 16 
+set dsl-port v$1ST_PORT# basic us-max-snr 16 
+set dsl-port v$1ST_PORT# basic ds-intrlv-max-latency 5 
+set dsl-port v$1ST_PORT# basic us-intrlv-max-latency 5 
+set dsl-port v$1ST_PORT# basic ds-min-inp 0.5 
+set dsl-port v$1ST_PORT# basic us-min-inp 0.5
+set dsl-port v$1ST_PORT# advanced ptm-override ptm 
+set dsl-port v$1ST_PORT# advanced atm-header-compress disabled 
+set dsl-port v$1ST_PORT# advanced ds-rate-adapt-mode dynamic
+set dsl-port v$1ST_PORT# advanced us-rate-adapt-mode dynamic
+set dsl-port v$1ST_PORT# advanced ds-enhanced-inp ginp
+set dsl-port v$1ST_PORT# advanced us-enhanced-inp ginp
+set dsl-port v$1ST_PORT# advanced ds-ginp-maxndr $DOWNSTREAM_RATE
+set dsl-port v$1ST_PORT# advanced ds-ginp-minetr 128
+set dsl-port v$1ST_PORT# advanced us-ginp-maxndr $UPSTREAM_RATE
+set dsl-port v$1ST_PORT# advanced us-ginp-minetr 64
+set dsl-port v$1ST_PORT# advanced ds-ginp-delaymax 20
+set dsl-port v$1ST_PORT# advanced us-ginp-delaymax 20
+set dsl-port v$1ST_PORT# psd upbo-band-1-a 53 upbo-band-1-b 12.94 upbo-band-2-a 54 upbo-band-2-b 7.41
+
+Step 3 (Cross Connect)
+
+Now Build the Cross Connect and set the ISPP acct ID:
+
+add eth-svc Data1 to-interface v$1ST_PORT# bw-profile $BW_PROFILE svc-tag-action $VLAN_NAME inner-vlan $C-TAG admin-state enabled
+set interface v$1ST_PORT# subscriber-id /$ISPPACCTID(10 DIGIT ISPP ACCOUNT ID)
+Note/ for NQQ VLANs, use "none" for the inner-vlan value
+
+add eth-svc Data1 to-interface v$1ST_PORT# bw-profile $BW_PROFILE svc-tag-action $VLAN_NAME inner-vlan none admin-state enabled
+set interface v$1ST_PORT# subscriber-id /$ISPPACCTID(10 DIGIT ISPP ACCOUNT ID)

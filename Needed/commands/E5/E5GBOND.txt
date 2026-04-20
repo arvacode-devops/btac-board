@@ -1,0 +1,45 @@
+Step 1 (Verify Card)
+vdsl profile show
+  OR
+adsl profile show
+
+Step 2 (Verify Model)
+sys info show
+
+Step 3 (Set DSL Port)
+vdsl enable $1ST_PORT#
+vdsl name $1ST_PORT# $Customer_Name
+vdsl tel $1ST_PORT# $CUSTOMER_TEL_NUMBER
+vdsl rate mode $1ST_PORT# profile
+vdsl profile map $1ST_PORT# $BW_PROFILE $service_type 
+vdsl transfer-mode set $1ST_PORT# ptm
+vdsl enable $2ND_PORT#
+vdsl name $2ND_PORT# $Customer_Name
+vdsl tel $2ND_PORT# $CUSTOMER_TEL_NUMBER
+vdsl rate mode $2ND_PORT# profile
+vdsl profile map $2ND_PORT# $BW_PROFILE $service_type 
+vdsl transfer-mode set $2ND_PORT# ptm
+
+Step 4 (SetUp Bond)
+vdsl gbond set $CUSTOMER_TEL_NUMBER $1ST_PORT#,$2ND_PORT#
+
+Step 4 (CrossConectt)
+vdsl dt set $1ST_PORT# $V-TAG 0 $C-TAG 0 
+vdsl dt enable $1ST_PORT# 
+vdsl dt set $2ND_PORT# $V-TAG 0 $C-TAG 0 
+vdsl dt enable $2ND_PORT# 
+
+vdsl dtpvc set $1ST_PORT# 0 35 DEFVAL $V-TAG 0 $C-TAG 0 auto llc 
+config save
+ 
+Step 6 (Verification)
+ vdsl gbond show
+
+
+ vdsl show  $1ST_PORT# 
+ vdsl show  $2ND_PORT# 
+
+
+ vdsl dt show $1ST_PORT# 
+ vdsl dt show $2ND_PORT# 
+ vdsl dtpvc show $1ST_PORT#
