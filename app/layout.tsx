@@ -7,6 +7,9 @@ import AuthGate from '@/app/components/AuthGate'
 const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
 const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
 
+// Auth-gated app — nothing to prerender, Firebase must run at request time
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'BTAC Board',
   description: 'Quick answer tool for back-office agents',
